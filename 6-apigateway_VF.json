@@ -1,0 +1,71 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "ApiGateway para balanceador app",
+    "Metadata": {},
+    "Parameters": {
+        "bucketApiGateway": {
+            "Type": "String",
+            "Description": "bucket s3 donde se aloja el archivo body del apigateway"
+        }
+    },
+    "Mappings": {},
+    "Conditions": {},
+    "Resources": {
+        "encuestaServiciosApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+                "Name": "Encuesta Api",
+                "Description": "API usada  requests",
+                "FailOnWarnings": true,
+                "BodyS3Location": {
+                    "Bucket": {
+                        "Ref": "bucketApiGateway"
+                    },
+                    "Key": "apiGatewayWithAWS_VF.json"
+                }
+            }
+        },
+        "deploymentEncuestaServiciosApi": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "encuestaServiciosApi"
+                },
+                "Description": "My deployment"
+            }
+        },
+        "prodStage": {
+            "Type": "AWS::ApiGateway::Stage",
+            "Properties": {
+                "StageName": "prod",
+                "Description": "Prod Stage",
+                "RestApiId": {
+                    "Ref": "encuestaServiciosApi"
+                },
+                "DeploymentId": {
+                    "Ref": "deploymentEncuestaServiciosApi"
+                },
+                "Variables": {
+                    "Stack": "prod"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "encuestaServiciosApiURL": {
+            "Description": "DNS API EncuestaServicios",
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "https://",
+                        {"Ref":"encuestaServiciosApi"},
+                        ".execute-api.",
+                        {"Ref":"AWS::Region"},
+                        ".amazonaws.com"
+                    ]
+                ]
+            }
+        }
+    }
+}
